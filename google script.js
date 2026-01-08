@@ -76,6 +76,13 @@ function doPost(e) {
   }
 }
 
+function doOptions(e) {
+  // Handle CORS preflight requests
+  // This is required when making POST requests with JSON from browsers
+  return ContentService.createTextOutput('')
+    .setMimeType(ContentService.MimeType.TEXT);
+}
+
 function doGet(e) {
   // Handle GET requests (optional - for testing)
   // Add CORS headers for GET requests as well
