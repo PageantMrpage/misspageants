@@ -1,16 +1,102 @@
 import { MapPin, Mail, Phone, Instagram, Youtube, Linkedin } from 'lucide-react';
 import { useState } from 'react';
 
+// Replace this URL with your Google Apps Script Web App URL after deployment
+// To get the URL: Deploy > New deployment > Web app > Copy the URL
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjqKr0FFk4SSFFOFZvY9VRXsrUC7ARqurCDdNEqX8O8oyk0m5OkEPTa2zQQd2QbTA/exec';
+
 export default function Contact() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone_number: '',
+    instagram_id: '',
+    city: '',
     message: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<{
+    type: 'success' | 'error' | null;
+    message: string;
+  }>({ type: null, message: '' });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    
+    if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbwjqKr0FFk4SSFFOFZvY9VRXsrUC7ARqurCDdNEqX8O8oyk0m5OkEPTa2zQQd2QbTA/exec') {
+      setSubmitStatus({
+        type: 'error',
+        message: 'Please configure the Google Apps Script URL in Contact.tsx'
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus({ type: null, message: '' });
+
+    try {
+      // Map form field names to match Google Script expectations
+      const submissionData = {
+        timestamp: new Date().toISOString(),
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone_number,
+        instagram: formData.instagram_id,
+        city: formData.city,
+        message: formData.message,
+      };
+
+      const response = await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submissionData),
+      });
+
+      // Try to parse response if available
+      let result;
+      try {
+        result = await response.json();
+      } catch {
+        // If response parsing fails, assume success (Google Apps Script may not return JSON in some cases)
+        result = { success: true };
+      }
+
+      if (result.success) {
+        setSubmitStatus({
+          type: 'success',
+          message: 'Application submitted successfully! We will get back to you soon.'
+        });
+      } else {
+        throw new Error(result.error || 'Submission failed');
+      }
+
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone_number: '',
+        instagram_id: '',
+        city: '',
+        message: '',
+      });
+
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setSubmitStatus({ type: null, message: '' });
+      }, 5000);
+
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setSubmitStatus({
+        type: 'error',
+        message: 'Failed to submit application. Please try again or contact us directly.'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -31,6 +117,19 @@ export default function Contact() {
             <h3 className="text-2xl font-bold text-white mb-6">Application Form</h3>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Status Message */}
+              {submitStatus.type && (
+                <div
+                  className={`p-4 rounded-lg ${
+                    submitStatus.type === 'success'
+                      ? 'bg-green-500/20 border border-green-500/50 text-green-300'
+                      : 'bg-red-500/20 border border-red-500/50 text-red-300'
+                  }`}
+                >
+                  {submitStatus.message}
+                </div>
+              )}
+
               <div>
                 <label className="block text-[#CFCFD5] text-sm mb-2">Name</label>
                 <input
@@ -39,8 +138,46 @@ export default function Contact() {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-4 py-3 bg-[#0B0C20] border border-[#8B4DFF]/30 rounded-lg text-white focus:outline-none focus:border-[#00B8E6] transition-colors"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
+
+              <div>
+                <label className="block text-[#CFCFD5] text-sm mb-2">Phone Number</label>
+                <input
+                  type="tel"
+                  value={formData.phone_number}
+                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                  className="w-full px-4 py-3 bg-[#0B0C20] border border-[#8B4DFF]/30 rounded-lg text-white focus:outline-none focus:border-[#00B8E6] transition-colors"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-[#CFCFD5] text-sm mb-2">Instagram ID</label>
+                <input
+                  type="text"
+                  value={formData.instagram_id}
+                  onChange={(e) => setFormData({ ...formData, instagram_id: e.target.value })}
+                  className="w-full px-4 py-3 bg-[#0B0C20] border border-[#8B4DFF]/30 rounded-lg text-white focus:outline-none focus:border-[#00B8E6] transition-colors"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#CFCFD5] text-sm mb-2">City</label>
+                <input
+                  type="text"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  className="w-full px-4 py-3 bg-[#0B0C20] border border-[#8B4DFF]/30 rounded-lg text-white focus:outline-none focus:border-[#00B8E6] transition-colors"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+              
 
               <div>
                 <label className="block text-[#CFCFD5] text-sm mb-2">Email</label>
@@ -50,6 +187,7 @@ export default function Contact() {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-4 py-3 bg-[#0B0C20] border border-[#8B4DFF]/30 rounded-lg text-white focus:outline-none focus:border-[#00B8E6] transition-colors"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
 
@@ -61,14 +199,16 @@ export default function Contact() {
                   rows={5}
                   className="w-full px-4 py-3 bg-[#0B0C20] border border-[#8B4DFF]/30 rounded-lg text-white focus:outline-none focus:border-[#00B8E6] transition-colors resize-none"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-4 bg-gradient-to-r from-[#00B8E6] to-[#8B4DFF] text-white uppercase tracking-[0.12em] font-semibold rounded-full hover:scale-105 hover:shadow-[0_0_30px_rgba(139,77,255,0.6)] transition-all duration-300"
+                disabled={isSubmitting}
+                className="w-full py-4 bg-gradient-to-r from-[#00B8E6] to-[#8B4DFF] text-white uppercase tracking-[0.12em] font-semibold rounded-full hover:scale-105 hover:shadow-[0_0_30px_rgba(139,77,255,0.6)] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
-                Apply Now
+                {isSubmitting ? 'Submitting...' : 'Apply Now'}
               </button>
             </form>
           </div>
