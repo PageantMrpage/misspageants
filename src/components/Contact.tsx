@@ -24,7 +24,7 @@ export default function Contact() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbwjqKr0FFk4SSFFOFZvY9VRXsrUC7ARqurCDdNEqX8O8oyk0m5OkEPTa2zQQd2QbTA/exec') {
+    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
       setSubmitStatus({
         type: 'error',
         message: 'Please configure the Google Apps Script URL in Contact.tsx'
